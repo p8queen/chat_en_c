@@ -4,15 +4,64 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <strings.h>
+#include <pthread.h>
+
+int sockfd, portno, clilen;
+struct sockaddr_in serv_addr, cli_addr;
+
+void* hiloComunicacion(void *argumento){
+    int newsockfd, n;
+    char buffer[256];
+    newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, 
+                                &clilen);
+    if (newsockfd < 0) 
+    {
+        perror("ERROR en aceptar coneccion");
+        exit(1);
+    }
+    
+    /* Connecion establecida */
+
+    bzero(buffer,256);
+    n = read( newsockfd,buffer,255 );
+    if (n < 0)
+    {
+        perror("ERROR leyendo desde socket");
+        exit(1);
+    }
+    printf("Aqui el mensaje: %s\n",buffer);
+
+    /* Write a response to the client */
+    n = write(newsockfd,"Obtuve el mensaje\n",18);
+    if (n < 0)
+    {
+        perror("ERROR escribiendo socket\n");
+        exit(1);
+    }
+    return NULL;
+}
+
+pthread_t crear_hilos(void *funcion_asociada){
+    pthread_t id;
+    pthread_attr_t attr;
+    if (pthread_attr_init(&attr) != 0){ 
+        perror("error init thread");
+        exit(1); }
+    if (pthread_create(&id,&attr,funcion_asociada,NULL) != 0) { 
+        perror("Error Create thread");
+        exit(1); }
+    return id;  
+}
 
 int main( int argc, char *argv[] )
 {
-    int sockfd, newsockfd, portno, clilen;
+    //int sockfd, newsockfd, portno, clilen;
+    int portno;
     char buffer[256];
-    struct sockaddr_in serv_addr, cli_addr;
-    int  n;
+    //struct sockaddr_in serv_addr, cli_addr;
+    //int  n;
 
-    /* First call to socket() function */
+    // primer llamado a socket
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) 
     {
@@ -39,6 +88,10 @@ int main( int argc, char *argv[] )
     clilen = sizeof(cli_addr);
 
     /* Acepta actual conecion  */
+    /* crear hilo */
+    pthread_t ids[5];
+    ids[0] = crear_hilos(hiloComunicacion);
+    /*
     newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, 
                                 &clilen);
     if (newsockfd < 0) 
@@ -47,8 +100,8 @@ int main( int argc, char *argv[] )
         exit(1);
     }
     
-    /* Connecion establecida */
-    /* crear hilo */
+    // Connecion establecida 
+
     bzero(buffer,256);
     n = read( newsockfd,buffer,255 );
     if (n < 0)
@@ -58,12 +111,16 @@ int main( int argc, char *argv[] )
     }
     printf("Aqui el mensaje: %s\n",buffer);
 
-    /* Write a response to the client */
+    // respuesta a cliente
     n = write(newsockfd,"Obtuve el mensaje\n",18);
     if (n < 0)
     {
         perror("ERROR escribiendo socket\n");
         exit(1);
     }
+    */
+
+    //espero finalizacion de hilos
+    pthread_join(ids[0],NULL);
     return 0; 
 }
