@@ -1,77 +1,60 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>   
+#include <sys/types.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
 #include <netdb.h>
-#include <string.h>
+#include <strings.h>
 
-struct mensaje {
-	char letra;
-	char usuario[255];
-	char texto[1024];
-	};
+#define PORT 5001
+#define MAXDATASIZE 100
 
-void menu();
-struct mensaje leer_mensajes();
+//espera argv[1] --> 127.0.0.1
+int main(int argc, char *argv[])
+{
+    int fd, numbytes;
+    char buf[MAXDATASIZE];
+    struct hostent *he;
+    struct sockaddr_in server;
 
-int main(){
-	menu();
-	struct mensaje elMensaje;
-	
-	//leer e imprimir mensajes
-	do{
-	  elMensaje = leer_mensajes();	
-	  //ver mensaje
-	  printf("letra: [%c], user: [%s], text: [%s]\n",
-		elMensaje.letra, elMensaje.usuario, elMensaje.texto);
-	} while ('e',elMensaje.letra != 'e' );
-	
-	return EXIT_SUCCESS;
-}
+    if (argc!=2) 
+    {
+    printf("Usa:[%s]<Direccion IP>\n", argv[1]);
+    exit(1);
+    }
 
-void menu(){
-	printf("\nMenu Ayuda de Comandos\n");	
-	printf("-----------------------\n\n");	
-	printf("cini nickname: iniciar\n");
-	printf("cend: finalizar\n");
-	printf("list: listado de usuarios conectados\n");
-	printf("sfile /path/archivo: envia archivo al otro usuario\n");				
-	printf("\n");	
-	}
+    if ( (he=gethostbyname(argv[1]) ) == NULL)
+    {
+        printf("error en gethosbyname\n" );
+        exit(1);
+    }
 
-struct mensaje leer_mensajes(){
-	char texto[1024];
-	char elUsuario[254];
-	struct mensaje msm;
-	printf("Ingrese mensaje:\n");
-	int a = 0;
-	do{	  
-	  texto[a] = getchar();
-	  a++;
-	} while (texto[a-1] != '\n');
-	texto[a-1]='\0';
-	//para cini ususario
-	char cini[5];
-	int i;
-	strncpy(cini,texto,4);
-	cini[4]='\0';
-	printf("cini texto: [%s] [%s]\n",cini, texto);
-	
-	if(strcmp("cini",cini) == 0){
-		msm.letra = 'c';
-		for(i=0;i<(strlen(texto)-5);i++)
-			elUsuario[i] = texto[i+5];
-		elUsuario[i] = '\0';
-		strcpy(msm.usuario,elUsuario);
-		}	
-	else if(strcmp("cend",texto) == 0)
-		msm.letra = 'e';
-	else if (strcmp("list",texto) == 0)
-		msm.letra = 'u';
-	else{ 
-		msm.letra = 't';
-		strcpy(msm.texto,texto);
-		}	
-	return msm;
-	
+    if ( (fd=socket(AF_INET,SOCK_STREAM,0)) == -1)
+    {
+        printf("error en socket\n" );
+        exit(1);
+    }
+
+    server.sin_family=AF_INET;
+    server.sin_port=htons(PORT);
+    server.sin_addr=*((struct in_addr*) he->h_addr);
+    bzero(&(server.sin_zero),0);
+
+    if (connect(fd,(struct sockaddr*)&server, sizeof(struct sockaddr))==-1)
+    {
+    printf("error en connect\n" );
+    exit(1);
+    }
+
+    if ( (numbytes=recv(fd,buf,MAXDATASIZE,0))==-1)
+    {
+    printf("error en recvn" );
+    exit(-1);
+    }
+
+    buf[numbytes]='\0';
+    printf("Mensaje del servidor:%s\n",buf);
+    close(fd);
+
+    return 0;
 }
