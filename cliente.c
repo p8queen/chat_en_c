@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 */
-    if(!(inet_aton(argv[1], &server.sin_addr))){
+    if((inet_aton(argv[1], &server.sin_addr)) == 0){
         perror("ip invalida\n"); exit(1);
     }
     server.sin_family=AF_INET;
