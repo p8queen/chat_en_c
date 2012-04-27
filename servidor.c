@@ -91,34 +91,6 @@ int main( int argc, char *argv[] )
     /* crear hilo */
     pthread_t ids[5];
     ids[0] = crear_hilos(hiloComunicacion);
-    /*
-    newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, 
-                                &clilen);
-    if (newsockfd < 0) 
-    {
-        perror("ERROR en aceptar coneccion");
-        exit(1);
-    }
-    
-    // Connecion establecida 
-
-    bzero(buffer,256);
-    n = read( newsockfd,buffer,255 );
-    if (n < 0)
-    {
-        perror("ERROR leyendo desde socket");
-        exit(1);
-    }
-    printf("Aqui el mensaje: %s\n",buffer);
-
-    // respuesta a cliente
-    n = write(newsockfd,"Obtuve el mensaje\n",18);
-    if (n < 0)
-    {
-        perror("ERROR escribiendo socket\n");
-        exit(1);
-    }
-    */
 
     //espero finalizacion de hilos
     pthread_join(ids[0],NULL);
