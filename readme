@@ -1,7 +1,8 @@
-Esto es para un TP de la Universidad
-compilar en ubuntu con: 
+# Chat En C para un TP de la Universidad
 
-- $ gcc -pthread -o servidor servidor.c
-- $ gcc -o cliente cliente.c
+### compilar en ubuntu con: 
+
+* $ gcc -pthread -o servidor servidor.c
+* $ gcc -o cliente cliente.c
 
 
