@@ -53,9 +53,15 @@ pthread_t crear_hilos(void *funcion_asociada){
     return id;  
 }
 
+//recibe cant de conecciones por parametro
 int main( int argc, char *argv[] )
 {
+    if (argc<2) {
+       perror("se esperaba ./servidor cantConecciones\n");
+       exit(1);
+    }
     //int sockfd, newsockfd, portno, clilen;
+    int cantConecciones = atoi(argv[1]);
     int portno;
     char buffer[256];
     //struct sockaddr_in serv_addr, cli_addr;
