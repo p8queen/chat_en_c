@@ -90,14 +90,17 @@ int main( int argc, char *argv[] )
     }
 
     /* Espera conecciones    */
-    listen(sockfd,5);
+    listen(sockfd,5); //5 es canidad máxima
     clilen = sizeof(cli_addr);
 
     /* Acepta actual conecion  */
     /* crear hilo */
     pthread_t ids[5];
-    ids[0] = crear_hilos(hiloComunicacion);
-
+    int contadorHilos = 0;
+    
+    ids[contadorHilos] = crear_hilos(hiloComunicacion);
+    contadorHilos++;
+    
     //espero finalizacion de hilos
     pthread_join(ids[0],NULL);
     return 0; 
