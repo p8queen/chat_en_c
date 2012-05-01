@@ -9,50 +9,6 @@
 int sockfd, portno, clilen;
 struct sockaddr_in serv_addr, cli_addr;
 
-void* hiloComunicacion(void *argumento){
-    int newsockfd, n;
-    char buffer[256];
-    newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, 
-                                &clilen);
-    if (newsockfd < 0) 
-    {
-        perror("ERROR en aceptar coneccion");
-        exit(1);
-    }
-    
-    /* Connecion establecida */
-
-    bzero(buffer,256);
-    n = read( newsockfd,buffer,255 );
-    if (n < 0)
-    {
-        perror("ERROR leyendo desde socket");
-        exit(1);
-    }
-    printf("Aqui el mensaje: %s\n",buffer);
-
-    /* Write a response to the client */
-    n = write(newsockfd,"Obtuve el mensaje\n",18);
-    if (n < 0)
-    {
-        perror("ERROR escribiendo socket\n");
-        exit(1);
-    }
-    return NULL;
-}
-
-pthread_t crear_hilos(void *funcion_asociada){
-    pthread_t id;
-    pthread_attr_t attr;
-    if (pthread_attr_init(&attr) != 0){ 
-        perror("error init thread");
-        exit(1); }
-    if (pthread_create(&id,&attr,funcion_asociada,NULL) != 0) { 
-        perror("Error Create thread");
-        exit(1); }
-    return id;  
-}
-
 //recibe cant de conecciones por parametro
 int main( int argc, char *argv[] )
 {
@@ -97,11 +53,42 @@ int main( int argc, char *argv[] )
     /* crear hilo */
     pthread_t ids[5];
     int contadorHilos = 0;
-    
-    ids[contadorHilos] = crear_hilos(hiloComunicacion);
-    contadorHilos++;
+    int newsockfd, n;
+        
+    while(1){
+        newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, 
+                                    &clilen);
+        if (newsockfd < 0) 
+        {
+            perror("ERROR en aceptar coneccion");
+            exit(1);
+        }
+        
+        /* Connecion establecida */
+
+        bzero(buffer,256);
+        n = read( newsockfd,buffer,255 );
+        if (n < 0)
+        {
+            perror("ERROR leyendo desde socket");
+            exit(1);
+        }
+        printf("Aqui el mensaje: %s\n",buffer);
+
+        /* Write a response to the client */
+        n = write(newsockfd,"Obtuve su mensaje\n",18);
+        if (n < 0)
+        {
+            perror("ERROR escribiendo socket\n");
+            exit(1);
+        }
+        close(newsockfd);
+    }//end while
+
+//    ids[contadorHilos] = crear_hilos(hiloComunicacion);
+  //  contadorHilos++;
     
     //espero finalizacion de hilos
-    pthread_join(ids[0],NULL);
+    //pthread_join(ids[0],NULL);
     return 0; 
 }
