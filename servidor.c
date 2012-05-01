@@ -85,10 +85,5 @@ int main( int argc, char *argv[] )
         close(newsockfd);
     }//end while
 
-//    ids[contadorHilos] = crear_hilos(hiloComunicacion);
-  //  contadorHilos++;
-    
-    //espero finalizacion de hilos
-    //pthread_join(ids[0],NULL);
     return 0; 
 }
