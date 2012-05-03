@@ -11,8 +11,25 @@ typedef struct stMensajes {
   char mensaje[255];
 } stMensajes;
 
+//Nodo es una pila de conecciones
+typedef struct nodo{
+    int sd;
+    char nombre[25];
+    struct nodo *siguiente;
+}Nodo;
+
 int sockfd, portno, clilen;
 struct sockaddr_in serv_addr, cli_addr;
+
+Nodo* crearNodo(int sd, char nombre[25], Nodo *ptr){
+    Nodo *nuevo;
+    nuevo = (Nodo*)malloc(sizeof(Nodo));
+    nuevo->sd = sd;
+    strcpy(nuevo->nombre,nombre);
+    nuevo->siguiente = ptr;
+    return nuevo;
+}
+
 
 //recibe cant de conecciones por parametro
 int main( int argc, char *argv[] )
@@ -61,12 +78,13 @@ int main( int argc, char *argv[] )
     int newsockfd, n;
     stMensajes vecSocket[20];
     int z=0;
-
+    Nodo *head, *ptrPila;
+    head = NULL;
+    char *p;
     while(1){
         newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, 
                                     &clilen);
-        if (newsockfd < 0) 
-        {
+        if (newsockfd < 0) {
             perror("ERROR en aceptar coneccion");
             exit(1);
         }
@@ -76,13 +94,23 @@ int main( int argc, char *argv[] )
         
         bzero(buffer,256);
         n = read( newsockfd,buffer,255 );
-        if (n < 0)
-        {
+        if (n < 0){
             perror("ERROR leyendo desde socket");
             exit(1);
         }
         buffer[n] = '\0';
         printf("Aqui el mensaje: %s\n",buffer);
+        //si se conecta
+        if(strncmp("cini ",buffer,5) == 0){
+            p = p+5;
+            head = crearNodo(newsockfd,p,head);
+            printf("recibi cini de: %s\n",p);
+        }else{
+            ptrPila = head;
+            printf("%s\n", ptrPila->nombre);
+        }
+
+
         //strcpy(vecSocket[z].mensaje,buffer);
 
         /* Write a response to the client */

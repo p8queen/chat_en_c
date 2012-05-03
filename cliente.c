@@ -4,7 +4,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
-#include <strings.h>
+#include <string.h>
 
 #define PORT 5001
 #define MAXDATASIZE 254
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
     }else{
         write(fd,"hola\n",5);
     }
-
+    char entradaTeclado[144];
     while(1){
         if ( (numbytes=recv(fd,buf,MAXDATASIZE,0))==-1)
         {
@@ -61,6 +61,8 @@ int main(int argc, char *argv[])
         printf("recibi algo\n");
         buf[numbytes]='\0';
         printf("Mensaje del servidor:%s\n",buf);
+        fgets(entradaTeclado, sizeof(entradaTeclado), stdin);
+        write(fd,entradaTeclado,strlen(entradaTeclado));
     }
 
     close(fd);
