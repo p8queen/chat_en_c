@@ -52,14 +52,17 @@ int main(int argc, char *argv[])
         write(fd,"hola\n",5);
     }
 
-    if ( (numbytes=recv(fd,buf,MAXDATASIZE,0))==-1)
-    {
-        printf("error en recvn" );
-        exit(-1);
+    while(1){
+        if ( (numbytes=recv(fd,buf,MAXDATASIZE,0))==-1)
+        {
+            printf("error en recvn\n" );
+            exit(-1);
         }
+        printf("recibi algo\n");
+        buf[numbytes]='\0';
+        printf("Mensaje del servidor:%s\n",buf);
+    }
 
-    buf[numbytes]='\0';
-    printf("Mensaje del servidor:%s\n",buf);
     close(fd);
 
     return 0;

@@ -3,8 +3,13 @@
 #include <sys/types.h> 
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <strings.h>
+#include <string.h>
 #include <pthread.h>
+
+typedef struct stMensajes {
+  int socket;
+  char mensaje[255];
+} stMensajes;
 
 int sockfd, portno, clilen;
 struct sockaddr_in serv_addr, cli_addr;
@@ -54,7 +59,9 @@ int main( int argc, char *argv[] )
     pthread_t ids[5];
     int contadorHilos = 0;
     int newsockfd, n;
-        
+    stMensajes vecSocket[20];
+    int z=0;
+
     while(1){
         newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, 
                                     &clilen);
@@ -63,9 +70,10 @@ int main( int argc, char *argv[] )
             perror("ERROR en aceptar coneccion");
             exit(1);
         }
-        
+        vecSocket[z].socket = newsockfd; 
         /* Connecion establecida */
-
+        //vecSocket[z].socket = newsockfd;
+        
         bzero(buffer,256);
         n = read( newsockfd,buffer,255 );
         if (n < 0)
@@ -73,7 +81,9 @@ int main( int argc, char *argv[] )
             perror("ERROR leyendo desde socket");
             exit(1);
         }
+        buffer[n] = '\0';
         printf("Aqui el mensaje: %s\n",buffer);
+        //strcpy(vecSocket[z].mensaje,buffer);
 
         /* Write a response to the client */
         n = write(newsockfd,"Obtuve su mensaje\n",18);
@@ -82,8 +92,24 @@ int main( int argc, char *argv[] )
             perror("ERROR escribiendo socket\n");
             exit(1);
         }
-        close(newsockfd);
+        n = write(vecSocket[0].socket,buffer,strlen(buffer));
+        if (n < 0)
+        {
+            perror("ERROR escribiendo socket\n");
+            exit(1);
+        }
+        z++;
+        //close(newsockfd);
     }//end while
+
+    //mensaje al primer cliente
+    n = write(vecSocket[0].socket,
+        vecSocket[1].mensaje,strlen(vecSocket[1].mensaje));
+    if (n < 0)
+    {
+        perror("ERROR escribiendo socket\n");
+        exit(1);
+    }
 
     return 0; 
 }
