@@ -5,15 +5,33 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <string.h>
+#include <pthread.h>
 
 #define PORT 5001
-#define MAXDATASIZE 254
+
+void* hiloEscuchaServidor(void *arg){
+    int sd = (int)arg; //socket
+    char buffer[256];
+    int n;
+    printf("en hilo sd: [%d]\n", sd);
+    int numbytes;
+    char buf[254];
+    while(1){
+        if ( (numbytes=recv(sd,buf,254,0))==-1) {
+            printf("error en recvn\n" ); exit(-1); }
+        printf("recibi algo\n");
+        buf[numbytes]='\0';
+        printf("Mensaje del servidor:%s\n",buf);
+        
+    }
+    return NULL;
+}
 
 //espera argv[1] --> 127.0.0.1
 int main(int argc, char *argv[])
 {
-    int fd, numbytes;
-    char buf[MAXDATASIZE];
+    int sd;
+    
 //    struct hostent *he;
     struct sockaddr_in server;
 
@@ -37,35 +55,35 @@ int main(int argc, char *argv[])
     //server.sin_addr=*((struct in_addr*) he->h_addr); //ip
     bzero(&(server.sin_zero),0);
     
-    if ( (fd=socket(AF_INET,SOCK_STREAM,0)) == -1)
+    if ( (sd=socket(AF_INET,SOCK_STREAM,0)) == -1)
     {
         printf("error en socket\n" );
         exit(1);
     }
 
     
-    if (connect(fd,(struct sockaddr*)&server, sizeof(struct sockaddr))==-1)
+    if (connect(sd,(struct sockaddr*)&server, sizeof(struct sockaddr))==-1)
     {
     printf("error en coneccion con socket servidor\n" );
     exit(1);
     }else{
-        write(fd,"hola\n",5);
-    }
+       write(sd,"cliente\n",8); }
+
+    //hilo de escuchaServidor
+    pthread_t id;
+    pthread_attr_t attr;
+    if (pthread_attr_init(&attr) != 0){
+        perror("error init"); exit(1); }
+    if(pthread_create(&id, &attr,hiloEscuchaServidor,(void *)sd) != 0){
+        perror("ERROR create");exit(1); }
+
     char entradaTeclado[144];
     while(1){
-        if ( (numbytes=recv(fd,buf,MAXDATASIZE,0))==-1)
-        {
-            printf("error en recvn\n" );
-            exit(-1);
-        }
-        printf("recibi algo\n");
-        buf[numbytes]='\0';
-        printf("Mensaje del servidor:%s\n",buf);
         fgets(entradaTeclado, sizeof(entradaTeclado), stdin);
-        write(fd,entradaTeclado,strlen(entradaTeclado));
+        write(sd,entradaTeclado,strlen(entradaTeclado));
     }
 
-    close(fd);
+    close(sd);
 
     return 0;
 }

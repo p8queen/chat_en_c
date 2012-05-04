@@ -20,6 +20,7 @@ typedef struct nodo{
 
 int sockfd, portno, clilen;
 struct sockaddr_in serv_addr, cli_addr;
+Nodo *head;
 
 Nodo* crearNodo(int sd, char nombre[25], Nodo *ptr){
     Nodo *nuevo;
@@ -30,6 +31,25 @@ Nodo* crearNodo(int sd, char nombre[25], Nodo *ptr){
     return nuevo;
 }
 
+void* hiloCliente(void *arg){
+    int sd = (int)arg; //socket
+    char buffer[256];
+    int n;
+    printf("en hilo sd: [%d]\n", sd);
+    while(1){
+        bzero(buffer,256);
+        n = read(sd,buffer,255 );
+        if (n < 0){
+          perror("ERROR leyendo desde socket"); exit(1); }
+        buffer[n] = '\0';
+        printf("en hilo %s\n", buffer);
+        /* respuesta a cliente */
+        n = write(sd,"Obtuve su mensaje\n",18);
+        if (n < 0){
+            perror("ERROR escribiendo socket\n");exit(1);}
+    }
+    return NULL;
+}
 
 //recibe cant de conecciones por parametro
 int main( int argc, char *argv[] )
@@ -76,11 +96,7 @@ int main( int argc, char *argv[] )
     pthread_t ids[5];
     int contadorHilos = 0;
     int newsockfd, n;
-    stMensajes vecSocket[20];
-    int z=0;
-    Nodo *head, *ptrPila;
-    head = NULL;
-    char *p;
+    head = NULL; //pila primer nodo
     while(1){
         newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, 
                                     &clilen);
@@ -88,9 +104,7 @@ int main( int argc, char *argv[] )
             perror("ERROR en aceptar coneccion");
             exit(1);
         }
-        vecSocket[z].socket = newsockfd; 
         /* Connecion establecida */
-        //vecSocket[z].socket = newsockfd;
         
         bzero(buffer,256);
         n = read( newsockfd,buffer,255 );
@@ -100,44 +114,20 @@ int main( int argc, char *argv[] )
         }
         buffer[n] = '\0';
         printf("Aqui el mensaje: %s\n",buffer);
-        //si se conecta
-        if(strncmp("cini ",buffer,5) == 0){
-            p = p+5;
-            head = crearNodo(newsockfd,p,head);
-            printf("recibi cini de: %s\n",p);
-        }else{
-            ptrPila = head;
-            printf("%s\n", ptrPila->nombre);
-        }
+        
+        //si se conecta crear nodo, crear hilo
+ 
+        pthread_t id;
+        pthread_attr_t attr;
+        if (pthread_attr_init(&attr) != 0){
+            perror("error init"); exit(1); }
+        if(pthread_create(&id, &attr,hiloCliente,(void *)newsockfd) != 0){
+            perror("ERROR create");exit(1); }
+         
 
 
-        //strcpy(vecSocket[z].mensaje,buffer);
-
-        /* Write a response to the client */
-        n = write(newsockfd,"Obtuve su mensaje\n",18);
-        if (n < 0)
-        {
-            perror("ERROR escribiendo socket\n");
-            exit(1);
-        }
-        n = write(vecSocket[0].socket,buffer,strlen(buffer));
-        if (n < 0)
-        {
-            perror("ERROR escribiendo socket\n");
-            exit(1);
-        }
-        z++;
-        //close(newsockfd);
+        
     }//end while
-
-    //mensaje al primer cliente
-    n = write(vecSocket[0].socket,
-        vecSocket[1].mensaje,strlen(vecSocket[1].mensaje));
-    if (n < 0)
-    {
-        perror("ERROR escribiendo socket\n");
-        exit(1);
-    }
 
     return 0; 
 }
