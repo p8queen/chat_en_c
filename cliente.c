@@ -13,7 +13,9 @@ typedef struct stMensaje{
     char letra;
     char usuario[25];
     char texto[1024];
+    char destinatario[25];
 }stMensaje;
+stMensaje stMsj;
 
 void mostrarMenu(){
     printf("Menu\n");
@@ -21,31 +23,36 @@ void mostrarMenu(){
 }
 
 
-stMensaje interpretarEntrada(char cadena[1050]){
-    stMensaje stMsj;
+void interpretarEntrada(char cadena[1050]){
+    stMsj;
     char *p;
     char primerPalabra[5];
     primerPalabra[4] = '\0';
     // borra '\n' 
     cadena[strlen(cadena)-1]='\0'; 
     strncpy(primerPalabra,cadena,4);
-    if (strcmp(primerPalabra,"cini") == 0)
+    if (strcmp(primerPalabra,"cini") == 0){
         stMsj.letra = 'c';
+        p=cadena;
+        p+=5;
+        strcpy(stMsj.usuario,(char*)p);
+    }
     else if (strcmp(primerPalabra,"cend") == 0)
         stMsj.letra = 'e';
     else if (strcmp(primerPalabra,"list") == 0)
         stMsj.letra = 'u';
     else if (strcmp(primerPalabra,"help") == 0)
         mostrarMenu();
+    else if (strcmp(primerPalabra,"cwit") == 0){
+        stMsj.letra = 'd';
+        p=cadena;
+        p+=5;
+        strcpy(stMsj.destinatario,(char*)p);
+    }
     else
         stMsj.letra = 't';
 
     
-    p=cadena;
-    p+=5;
-    strcpy(stMsj.usuario,(char*)p);
-    strcpy(stMsj.texto,"hola mundo");
-    return stMsj;
 }
 
 
@@ -74,7 +81,7 @@ int main(int argc, char *argv[])
     
 //    struct hostent *he;
     struct sockaddr_in server;
-    stMensaje stMsj;
+    
 
     if (argc!=2) 
     {
@@ -117,7 +124,7 @@ int main(int argc, char *argv[])
     char entradaTeclado[144];
     while(1){
         fgets(entradaTeclado, sizeof(entradaTeclado)-1, stdin);
-        stMsj = interpretarEntrada(entradaTeclado);
+        interpretarEntrada(entradaTeclado);
         write(sd,&stMsj,sizeof(stMsj));
     }
 

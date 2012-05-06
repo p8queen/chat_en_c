@@ -11,6 +11,7 @@ typedef struct stMensaje{
     char letra;
     char usuario[25];
     char texto[1024];
+    char destinatario[25];
 }stMensaje;
 
 //Nodo es una pila de conecciones
@@ -50,11 +51,31 @@ void listaUsuarios(int sd){
 
 }
 
+void desconectarUsuario(stMensaje stMsj){
+    int primero = 1;
+    Nodo *ptr, *antp;
+    ptr = head;
+    while((ptr != NULL) && (strcmp(ptr->nombre,stMsj.usuario) != 0)){
+        primero = 0;
+        antp = ptr;
+        ptr = ptr->siguiente;
+    }
+
+    if(primero){
+        head = ptr->siguiente;
+        free(ptr);
+    }else{
+        if(ptr != NULL){
+        antp = antp->siguiente;
+        free(ptr);
+        }
+    }   
+}
 void interpretaMensaje(stMensaje stMsj, int sd){
     if (stMsj.letra == 'c')
         agregarUsuario(stMsj, sd);
     else if (stMsj.letra == 'e')
-        printf("desconectarUsuario(stMsj))\n");
+        desconectarUsuario(stMsj);
     else if (stMsj.letra == 'u')
         listaUsuarios(sd);
     else
