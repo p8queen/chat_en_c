@@ -33,6 +33,18 @@ Nodo* crearNodo(int sd, char nombre[25], Nodo *ptr){
     return nuevo;
 }
 
+void interpretaMensaje(stMensaje stMsj){
+    if (stMsj.letra == 'c')
+        printf("agregarUsuario(stMsj)\n");
+    else if (stMsj.letra == 'e')
+        printf("desconectarUsuario(stMsj))\n");
+    else if (stMsj.letra == 'u')
+        printf("listaUsuarios()\n");
+    else
+        printf("enviarMensaje(stMsj)\n");
+
+}
+
 void* hiloCliente(void *arg){
     int sd = (int)arg; //socket
     stMensaje stMsj;
@@ -45,6 +57,7 @@ void* hiloCliente(void *arg){
         
         printf("en hilo letra: [%c] usuario: [%s] mensaje: [%s] \n",
             stMsj.letra,  stMsj.usuario, stMsj.texto);
+        interpretaMensaje(stMsj);
         /* respuesta a cliente */
         n = write(sd,"Obtuve su mensaje\n",18);
         if (n < 0){

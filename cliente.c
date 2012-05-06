@@ -37,6 +37,8 @@ stMensaje interpretarEntrada(char cadena[1050]){
         stMsj.letra = 'u';
     else if (strcmp(primerPalabra,"help") == 0)
         mostrarMenu();
+    else
+        stMsj.letra = 't';
 
     
     p=cadena;
