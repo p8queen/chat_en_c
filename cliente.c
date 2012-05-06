@@ -103,12 +103,8 @@ int main(int argc, char *argv[])
     }
 
     
-    if (connect(sd,(struct sockaddr*)&server, sizeof(struct sockaddr))==-1)
-    {
-    printf("error en coneccion con socket servidor\n" );
-    exit(1);
-    }else{
-       write(sd,"cliente\n",8); }
+    if (connect(sd,(struct sockaddr*)&server, sizeof(struct sockaddr))==-1){
+       printf("error en coneccion con socket servidor\n" ); exit(1); }
 
     //hilo de escuchaServidor
     pthread_t id;

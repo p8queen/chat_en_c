@@ -20,7 +20,7 @@ typedef struct nodo{
     struct nodo *siguiente;
 }Nodo;
 
-int sockfd, portno, clilen;
+int sockfd, portno;
 struct sockaddr_in serv_addr, cli_addr;
 Nodo *head;
 
@@ -33,13 +33,30 @@ Nodo* crearNodo(int sd, char nombre[25], Nodo *ptr){
     return nuevo;
 }
 
-void interpretaMensaje(stMensaje stMsj){
+void agregarUsuario(stMensaje stMsj, int sd){
+    //agrega usuario a la Pila
+    head = crearNodo(sd,stMsj.usuario,head);
+}
+
+
+void listaUsuarios(int sd){
+    Nodo* ptr;
+    ptr = head;
+    //mandar por sd matriz de usuarios
+    while(ptr != NULL){
+        printf("[%s]\n", ptr->nombre);
+        ptr = ptr->siguiente;
+    }
+
+}
+
+void interpretaMensaje(stMensaje stMsj, int sd){
     if (stMsj.letra == 'c')
-        printf("agregarUsuario(stMsj)\n");
+        agregarUsuario(stMsj, sd);
     else if (stMsj.letra == 'e')
         printf("desconectarUsuario(stMsj))\n");
     else if (stMsj.letra == 'u')
-        printf("listaUsuarios()\n");
+        listaUsuarios(sd);
     else
         printf("enviarMensaje(stMsj)\n");
 
@@ -57,7 +74,7 @@ void* hiloCliente(void *arg){
         
         printf("en hilo letra: [%c] usuario: [%s] mensaje: [%s] \n",
             stMsj.letra,  stMsj.usuario, stMsj.texto);
-        interpretaMensaje(stMsj);
+        interpretaMensaje(stMsj, sd);
         /* respuesta a cliente */
         n = write(sd,"Obtuve su mensaje\n",18);
         if (n < 0){
@@ -115,14 +132,14 @@ int main( int argc, char *argv[] )
 
     /* Espera conecciones    */
     listen(sockfd,5); //5 es canidad máxima
-    clilen = sizeof(cli_addr);
+    int clilen = sizeof(cli_addr);
 
     /* Acepta actual conecion  */
     /* crear hilo */
     pthread_t ids[5];
     int contadorHilos = 0;
     int newsockfd, n;
-    head = NULL; //pila primer nodo
+    head = NULL; //crea pila 
     while(1){
         newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, 
                                     &clilen);
@@ -131,16 +148,6 @@ int main( int argc, char *argv[] )
             exit(1);
         }
         /* Connecion establecida */
-        /*
-        bzero(buffer,256);
-        n = read( newsockfd,buffer,255 );
-        if (n < 0){
-            perror("ERROR leyendo desde socket");
-            exit(1);
-        }
-        buffer[n] = '\0';
-        printf("Aqui el mensaje: %s\n",buffer);
-        */
         //si se conecta crear nodo, crear hilo
         crearHilo(newsockfd);
 
