@@ -3,6 +3,6 @@
 ### compilar en ubuntu con: 
 
 * $ gcc -pthread -o servidor servidor.c
-* $ gcc -o cliente cliente.c
+* $ gcc -pthread -o cliente cliente.c
 
 

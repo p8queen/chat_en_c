@@ -9,6 +9,44 @@
 
 #define PORT 5001
 
+typedef struct stMensaje{
+    char letra;
+    char usuario[25];
+    char texto[1024];
+}stMensaje;
+
+void mostrarMenu(){
+    printf("Menu\n");
+
+}
+
+
+stMensaje interpretarEntrada(char cadena[1050]){
+    stMensaje stMsj;
+    char *p;
+    char primerPalabra[5];
+    primerPalabra[4] = '\0';
+    // borra '\n' 
+    cadena[strlen(cadena)-1]='\0'; 
+    strncpy(primerPalabra,cadena,4);
+    if (strcmp(primerPalabra,"cini") == 0)
+        stMsj.letra = 'c';
+    else if (strcmp(primerPalabra,"cend") == 0)
+        stMsj.letra = 'e';
+    else if (strcmp(primerPalabra,"list") == 0)
+        stMsj.letra = 'u';
+    else if (strcmp(primerPalabra,"help") == 0)
+        mostrarMenu();
+
+    
+    p=cadena;
+    p+=5;
+    strcpy(stMsj.usuario,(char*)p);
+    strcpy(stMsj.texto,"hola mundo");
+    return stMsj;
+}
+
+
 void* hiloEscuchaServidor(void *arg){
     int sd = (int)arg; //socket
     char buffer[256];
@@ -34,6 +72,7 @@ int main(int argc, char *argv[])
     
 //    struct hostent *he;
     struct sockaddr_in server;
+    stMensaje stMsj;
 
     if (argc!=2) 
     {
@@ -79,8 +118,9 @@ int main(int argc, char *argv[])
 
     char entradaTeclado[144];
     while(1){
-        fgets(entradaTeclado, sizeof(entradaTeclado), stdin);
-        write(sd,entradaTeclado,strlen(entradaTeclado));
+        fgets(entradaTeclado, sizeof(entradaTeclado)-1, stdin);
+        stMsj = interpretarEntrada(entradaTeclado);
+        write(sd,&stMsj,sizeof(stMsj));
     }
 
     close(sd);

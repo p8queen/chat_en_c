@@ -6,10 +6,12 @@
 #include <string.h>
 #include <pthread.h>
 
-typedef struct stMensajes {
-  int socket;
-  char mensaje[255];
-} stMensajes;
+//estructura enviada por el cliente
+typedef struct stMensaje{
+    char letra;
+    char usuario[25];
+    char texto[1024];
+}stMensaje;
 
 //Nodo es una pila de conecciones
 typedef struct nodo{
@@ -33,22 +35,33 @@ Nodo* crearNodo(int sd, char nombre[25], Nodo *ptr){
 
 void* hiloCliente(void *arg){
     int sd = (int)arg; //socket
-    char buffer[256];
+    stMensaje stMsj;
     int n;
     printf("en hilo sd: [%d]\n", sd);
     while(1){
-        bzero(buffer,256);
-        n = read(sd,buffer,255 );
+        n = read(sd,&stMsj,sizeof(stMsj));
         if (n < 0){
           perror("ERROR leyendo desde socket"); exit(1); }
-        buffer[n] = '\0';
-        printf("en hilo %s\n", buffer);
+        
+        printf("en hilo letra: [%c] usuario: [%s] mensaje: [%s] \n",
+            stMsj.letra,  stMsj.usuario, stMsj.texto);
         /* respuesta a cliente */
         n = write(sd,"Obtuve su mensaje\n",18);
         if (n < 0){
             perror("ERROR escribiendo socket\n");exit(1);}
     }
     return NULL;
+}
+
+void crearHilo(int newsockfd){
+    pthread_t id;
+    pthread_attr_t attr;
+    if (pthread_attr_init(&attr) != 0){
+        perror("error init hilo"); exit(1); }
+    if(pthread_create(&id, &attr,hiloCliente,(void *)newsockfd) != 0){
+        perror("ERROR create hilo");exit(1); }
+
+
 }
 
 //recibe cant de conecciones por parametro
@@ -105,7 +118,7 @@ int main( int argc, char *argv[] )
             exit(1);
         }
         /* Connecion establecida */
-        
+        /*
         bzero(buffer,256);
         n = read( newsockfd,buffer,255 );
         if (n < 0){
@@ -114,19 +127,10 @@ int main( int argc, char *argv[] )
         }
         buffer[n] = '\0';
         printf("Aqui el mensaje: %s\n",buffer);
-        
+        */
         //si se conecta crear nodo, crear hilo
- 
-        pthread_t id;
-        pthread_attr_t attr;
-        if (pthread_attr_init(&attr) != 0){
-            perror("error init"); exit(1); }
-        if(pthread_create(&id, &attr,hiloCliente,(void *)newsockfd) != 0){
-            perror("ERROR create");exit(1); }
-         
+        crearHilo(newsockfd);
 
-
-        
     }//end while
 
     return 0; 
