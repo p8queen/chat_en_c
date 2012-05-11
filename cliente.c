@@ -49,9 +49,10 @@ void interpretarEntrada(char cadena[1050]){
         p+=5;
         strcpy(stMsj.destinatario,(char*)p);
     }
-    else
+    else{
         stMsj.letra = 't';
-
+        strcpy(stMsj.texto,cadena);
+    }
     
 }
 
@@ -62,13 +63,13 @@ void* hiloEscuchaServidor(void *arg){
     int n;
     printf("en hilo sd: [%d]\n", sd);
     int numbytes;
-    char buf[254];
+    char buf[255];
     while(1){
         if ( (numbytes=recv(sd,buf,254,0))==-1) {
             printf("error en recvn\n" ); exit(-1); }
         printf("recibi algo\n");
         buf[numbytes]='\0';
-        printf("Mensaje del servidor:%s\n",buf);
+        printf("Mensaje del servidor:\n%s\n",buf);
         
     }
     return NULL;

@@ -43,11 +43,24 @@ void agregarUsuario(stMensaje stMsj, int sd){
 void listaUsuarios(int sd){
     Nodo* ptr;
     ptr = head;
+    char lista[255*25],*p;
+    //bzero(lista,sizeof(lista));
+    int i=0;
+    p=lista;
     //mandar por sd matriz de usuarios
     while(ptr != NULL){
         printf("[%s]\n", ptr->nombre);
+        strcpy((char*)p,ptr->nombre);
+        i=strlen(ptr->nombre);
+        p = p+i;
+        *p='\n';
+        p++;
         ptr = ptr->siguiente;
     }
+    *p='\0';
+    printf("[%s]\n", lista);
+    if(write(sd,lista,strlen(lista))<0){
+        perror("error al escribir list\n");exit(1);}
 
 }
 
@@ -71,6 +84,34 @@ void desconectarUsuario(stMensaje stMsj){
         }
     }   
 }
+
+int getSocketDestinatario(char destinatario[25]){
+    int sdd=-1;
+    Nodo* ptr;
+    ptr = head;
+    while(ptr != NULL){
+        printf("sock destinatario: [%d]\n", ptr->sd);
+        if(strcmp(destinatario,ptr->nombre)==0){
+            sdd = ptr->sd;
+            break;
+        }
+    ptr = ptr->siguiente;
+    }
+    return sdd;
+}
+
+void enviarA_destinatario(stMensaje stMsj){
+    int sdd = getSocketDestinatario(stMsj.destinatario);
+    
+    if(sdd<0){
+      perror("error get socket destinatario\n");exit(1);}
+    
+    printf("%s\n", stMsj.texto);
+    int n=write(sdd,stMsj.texto,strlen(stMsj.texto));
+    if (n < 0){
+            perror("ERROR escribiendo socket\n");exit(1);}
+}
+
 void interpretaMensaje(stMensaje stMsj, int sd){
     if (stMsj.letra == 'c')
         agregarUsuario(stMsj, sd);
@@ -78,6 +119,8 @@ void interpretaMensaje(stMensaje stMsj, int sd){
         desconectarUsuario(stMsj);
     else if (stMsj.letra == 'u')
         listaUsuarios(sd);
+    else if (stMsj.letra == 't')
+        enviarA_destinatario(stMsj);
     else
         printf("enviarMensaje(stMsj)\n");
 
@@ -93,11 +136,10 @@ void* hiloCliente(void *arg){
         if (n < 0){
           perror("ERROR leyendo desde socket"); exit(1); }
         
-        printf("en hilo letra: [%c] usuario: [%s] mensaje: [%s] \n",
-            stMsj.letra,  stMsj.usuario, stMsj.texto);
+        printf("en hilo letra: [%c] usuario: [%s] mensaje: [%s] destinatario: [%s]\n",
+            stMsj.letra,  stMsj.usuario, stMsj.texto, stMsj.destinatario);
         interpretaMensaje(stMsj, sd);
         /* respuesta a cliente */
-        n = write(sd,"Obtuve su mensaje\n",18);
         if (n < 0){
             perror("ERROR escribiendo socket\n");exit(1);}
     }
