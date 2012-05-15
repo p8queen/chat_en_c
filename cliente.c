@@ -6,8 +6,12 @@
 #include <netdb.h>
 #include <string.h>
 #include <pthread.h>
+#include <signal.h>
 
 #define PORT 5001
+
+//socket usado en handler
+int sd; 
 
 typedef struct stMensaje{
     char letra;
@@ -24,7 +28,7 @@ void mostrarMenu(){
 
 
 void interpretarEntrada(char cadena[1050]){
-    stMsj;
+    //stMsj;
     char *p;
     char primerPalabra[5];
     primerPalabra[4] = '\0';
@@ -74,12 +78,19 @@ void* hiloEscuchaServidor(void *arg){
     }
     return NULL;
 }
-
+void handler_cliente(int arg){
+    printf("usuario cerro desde consola\n");
+    stMsj.letra = 'e';
+    strcpy(stMsj.texto,"cerrado desde handler");
+    //write(sd,&stMsj,sizeof(stMsj));
+    exit(1);
+}
 //espera argv[1] --> 127.0.0.1
 int main(int argc, char *argv[])
 {
-    int sd;
     
+    //signals
+    signal(SIGINT,&handler_cliente);
 //    struct hostent *he;
     struct sockaddr_in server;
     

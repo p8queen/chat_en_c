@@ -5,6 +5,8 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <pthread.h>
+#include <unistd.h>
+
 
 //estructura enviada por el cliente
 typedef struct stMensaje{
@@ -64,7 +66,7 @@ void listaUsuarios(int sd){
 
 }
 
-void desconectarUsuario(stMensaje stMsj){
+void desconectarUsuario(stMensaje stMsj, int sd){
     int primero = 1;
     Nodo *ptr, *antp;
     ptr = head;
@@ -83,6 +85,9 @@ void desconectarUsuario(stMensaje stMsj){
         free(ptr);
         }
     }   
+    //cerrar socket de usuario
+
+    //matar hilo
 }
 
 int getSocketDestinatario(char destinatario[25]){
@@ -104,19 +109,21 @@ void enviarA_destinatario(stMensaje stMsj){
     int sdd = getSocketDestinatario(stMsj.destinatario);
     
     if(sdd<0){
-      perror("error get socket destinatario\n");exit(1);}
-    
-    printf("%s\n", stMsj.texto);
-    int n=write(sdd,stMsj.texto,strlen(stMsj.texto));
-    if (n < 0){
-            perror("ERROR escribiendo socket\n");exit(1);}
+      printf("error get socket destinatario\n");
+      printf("Intente cwit destinatario\n"); 
+    }else{    
+        printf("%s\n", stMsj.texto);
+        int n=write(sdd,stMsj.texto,strlen(stMsj.texto));
+        if (n < 0){
+                perror("ERROR escribiendo socket\n");exit(1);}
+    }            
 }
 
 void interpretaMensaje(stMensaje stMsj, int sd){
     if (stMsj.letra == 'c')
         agregarUsuario(stMsj, sd);
     else if (stMsj.letra == 'e')
-        desconectarUsuario(stMsj);
+        desconectarUsuario(stMsj, sd);
     else if (stMsj.letra == 'u')
         listaUsuarios(sd);
     else if (stMsj.letra == 't')
@@ -157,6 +164,8 @@ void crearHilo(int newsockfd){
 
 }
 
+
+
 //recibe cant de conecciones por parametro
 int main( int argc, char *argv[] )
 {
@@ -164,6 +173,7 @@ int main( int argc, char *argv[] )
        perror("se esperaba ./servidor cantConecciones\n");
        exit(1);
     }
+    
     //int sockfd, newsockfd, portno, clilen;
     int cantConecciones = atoi(argv[1]);
     int portno;
