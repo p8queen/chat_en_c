@@ -20,6 +20,8 @@ typedef struct stMensaje{
 typedef struct nodo{
     int sd;
     char nombre[25];
+    char ip[15];
+    int puerto;
     struct nodo *siguiente;
 }Nodo;
 
