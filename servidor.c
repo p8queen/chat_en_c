@@ -12,6 +12,8 @@
 typedef struct stMensaje{
     char letra;
     char usuario[25];
+    char ip[15];
+    int puerto;
     char texto[1024];
     char destinatario[25];
 }stMensaje;
@@ -29,18 +31,20 @@ int sockfd, portno;
 struct sockaddr_in serv_addr, cli_addr;
 Nodo *head;
 
-Nodo* crearNodo(int sd, char nombre[25], Nodo *ptr){
+Nodo* crearNodo(int sd, char nombre[25], char ip[15],int puerto, Nodo *ptr){
     Nodo *nuevo;
     nuevo = (Nodo*)malloc(sizeof(Nodo));
     nuevo->sd = sd;
     strcpy(nuevo->nombre,nombre);
+    strcpy(nuevo->ip,ip);
+    nuevo->puerto = puerto;
     nuevo->siguiente = ptr;
     return nuevo;
 }
 
 void agregarUsuario(stMensaje stMsj, int sd){
     //agrega usuario a la Pila
-    head = crearNodo(sd,stMsj.usuario,head);
+    head = crearNodo(sd,stMsj.usuario,stMsj.ip,stMsj.puerto,head);
 }
 
 
@@ -124,8 +128,10 @@ void enviarA_destinatario(stMensaje stMsj){
 void interpretaMensaje(stMensaje stMsj, int sd){
     if (stMsj.letra == 'c')
         agregarUsuario(stMsj, sd);
-    else if (stMsj.letra == 'e')
+    else if (stMsj.letra == 'e'){
         desconectarUsuario(stMsj, sd);
+        pthread_exit(NULL);
+        }
     else if (stMsj.letra == 'u')
         listaUsuarios(sd);
     else if (stMsj.letra == 't')
@@ -145,8 +151,8 @@ void* hiloCliente(void *arg){
         if (n < 0){
           perror("ERROR leyendo desde socket"); exit(1); }
         
-        printf("en hilo letra: [%c] usuario: [%s] mensaje: [%s] destinatario: [%s]\n",
-            stMsj.letra,  stMsj.usuario, stMsj.texto, stMsj.destinatario);
+        printf("en hilo cliente, letra: [%c] usuario: [%s] ip: [%s] puerto: [%d] mensaje: [%s] destinatario: [%s]\n",
+            stMsj.letra,  stMsj.usuario, stMsj.ip, stMsj.puerto, stMsj.texto, stMsj.destinatario);
         interpretaMensaje(stMsj, sd);
         /* respuesta a cliente */
         if (n < 0){

@@ -9,15 +9,18 @@
 #include <signal.h>
 #include <fcntl.h>
 
-#define PORT 5001
+#define PORTCP 5001
 #define IP "127.0.01"
 
 //socket usado en handler
-int sd, puertoUDP; 
+int sd, puertoUDP;
+char ip[15]; 
 
 typedef struct stMensaje{
     char letra;
     char usuario[25];
+    char ip[15];
+    int puerto;
     char texto[1024];
     char destinatario[25];
 }stMensaje;
@@ -25,10 +28,8 @@ stMensaje stMsj;
 
 // UDP
 //
-char* getNombreArchivo(){
-    char buffer[512], *p;
-    strcpy(buffer,"$HOME/temp/udp/README.md");
-    //lo abro y si no existe marco error
+char* getNombreArchivo(char buffer[255]){
+    char *p;
     int i;
     p=buffer;
     for (i = strlen(buffer); i >=0 ; --i){
@@ -49,7 +50,9 @@ void enviarArchivo(int socketUDP, struct sockaddr_in serv_cliente){
           off_t size;
       }encabezado;  
     int long_cliente=sizeof(serv_cliente);
-    strcpy(encabezado.nombre,"/home/gustavo/temp/uno.php");
+    char *pn;
+    pn = getNombreArchivo(nombre);
+    strcpy(encabezado.nombre,(char*)pn);
     //
     int fd = open(encabezado.nombre,O_RDONLY,0777);
      if( fd<0 ) {
@@ -111,8 +114,11 @@ void* hiloUDPServer(void *arg){
             (struct sockaddr *) &serv_cliente1,&long_cliente);
         if (e<0){ perror("error en recvfrom\n");exit(1);}
         //crear archivo
-    strcat(encabezado.nombre,".copy");
-    int fd = open(encabezado.nombre,O_CREAT | O_WRONLY, 0777); // NOTA: si hago un read va a dar error porque estamos abiendolo como O_WRONLY
+        char filename[255];
+    sprintf(filename,"./descargas/%s.copy",encabezado.nombre);
+    //strcat(encabezado.nombre,".copy");
+    int fd = open(filename,O_CREAT | O_WRONLY, 0777); 
+    // NOTA: si hago un read va a dar error porque estamos abiendolo como O_WRONLY
     if( fd<0 ) { perror("no se pudo abrir el archivo.\n");exit(1); }
     printf("comienzo de transferencia\n");
     int acumulador=0;
@@ -158,6 +164,8 @@ void interpretarEntrada(char cadena[1050]){
     strncpy(primerPalabra,cadena,4);
     if (strcmp(primerPalabra,"cini") == 0){
         stMsj.letra = 'c';
+        strcpy(stMsj.ip,ip);
+        stMsj.puerto = puertoUDP;
         p=cadena;
         p+=5;
         strcpy(stMsj.usuario,(char*)p);
@@ -194,7 +202,12 @@ void* hiloEscuchaServidor(void *arg){
             printf("error en recvn\n" ); exit(-1); }
         printf("recibi algo\n");
         buf[numbytes]='\0';
-        printf("Mensaje del servidor:\n%s\n",buf);
+        if(numbytes == 0){
+            printf("Servidor cerró inesperadamente\n");
+            printf("Salga para volver a conectarse\n");
+            pthread_exit(NULL);    
+            }
+        printf("Mensaje del servidor:\n[%s]\n",buf);
         
     }
     return NULL;
@@ -203,13 +216,15 @@ void handler_cliente(int arg){
     printf("usuario cerro desde consola\n");
     stMsj.letra = 'e';
     strcpy(stMsj.texto,"cerrado desde handler");
-    //write(sd,&stMsj,sizeof(stMsj));
+    write(sd,&stMsj,sizeof(stMsj));
     exit(1);
 }
 //espera argv[1] --> 127.0.0.1
 int main(int argc, char *argv[])
 {
-    puertoUDP = atoi(argv[2]); 
+    puertoUDP = atoi(argv[2]);
+    strcpy(ip,argv[1]);
+
     int hudp = crearHiloUDP(); 
     
     //signals
@@ -220,7 +235,7 @@ int main(int argc, char *argv[])
 
     if (argc!=3) 
     {
-    printf("Usa:[%s]<Direccion IP> <Puerto>\n", argv[1]);
+    printf("Usa:[%s]<Direccion IP> <Puerto>\n", argv[0]);
     exit(1);
     }
 /*
@@ -234,7 +249,7 @@ int main(int argc, char *argv[])
         perror("ip invalida\n"); exit(1);
     }
     server.sin_family=AF_INET;
-    server.sin_port=htons(PORT);
+    server.sin_port=htons(PORTCP);
     //server.sin_addr=*((struct in_addr*) he->h_addr); //ip
     bzero(&(server.sin_zero),0);
     
@@ -249,14 +264,15 @@ int main(int argc, char *argv[])
        perror("error en coneccion con socket servidor\n" ); 
        exit(1); }
 
-    //hilo de escuchaServidor
+    //hilo de escuchaServidorTCP
     pthread_t id;
     pthread_attr_t attr;
     if (pthread_attr_init(&attr) != 0){
         perror("error init"); exit(1); }
     if(pthread_create(&id, &attr,hiloEscuchaServidor,(void *)sd) != 0){
         perror("ERROR create");exit(1); }
-
+    //fin hilo escuchadorServidorTCP
+        
     char entradaTeclado[144];
     while(1){
         fgets(entradaTeclado, sizeof(entradaTeclado)-1, stdin);
